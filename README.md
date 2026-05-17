@@ -76,7 +76,7 @@ mongod
 ### 4\. Create a `.env` file
 
 ```
-JWT\\\\\\\_SECRET=your_secret_key_here
+JWT_SECRET=your_secret_key_here
 PORT=3000
 ```
 
@@ -92,10 +92,10 @@ Open `ApplicationProject02.html` in your browser.
 
 ```
 
-\\\\---
+---
 > Passwords are bcrypt hashed in the database.
 
-\\\\---
+---
 
 ## 
 
