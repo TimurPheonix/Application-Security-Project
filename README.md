@@ -56,14 +56,6 @@ A secure web application built as part of the Application Security course. It de
 |Generic Errors|Same error message for wrong username or wrong password|
 
 
-## Code Scanning Tools Used
-
-* \[x] GitHub CodeQL — static analysis for JS vulnerabilities
-* \[x] Snyk — dependency vulnerability scanning
-* Reports in [`scans/`](scans/) directory
-
-\---
-
 ## Setup Instructions
 
 ### 1\. Clone the repository
