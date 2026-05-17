@@ -1,16 +1,11 @@
-# Secure Web Application
-
-**Course:** Application Security  
-**Department:** CyberSecurity  
-**Deadline:** Week 14
-
+# Secure Web Application – [ServerAppProject]
 \---
 
 ## Description
-
-A secure web application built as part of the Application Security course. It demonstrates real-world secure coding practices including JWT authentication, role-based access control, AES encryption, bcrypt hashing, input validation, session management, and threat modeling.
-
-\---
+A secure web application developed as part of the Application Security and Secure Code course. This app
+demonstrates secure coding practices including authentication, input validation, encryption, role-based
+access control, and threat modeling.
+---
 
 ## Tech Stack
 
@@ -27,44 +22,45 @@ A secure web application built as part of the Application Security course. It de
 \---
 
 ## Features
-
-* User Registration \& Login
-* Role-based access: Admin / User
-* Admin can view all users and delete them
-* Session management with 5-minute timeout and auto-logout
-* Login attempt limiting (3 attempts → 30s lockout)
-* Last login time tracking via sessionStorage
-* Password hashing with bcrypt
-* Role field encrypted with AES-256-CBC in MongoDB
-* Input validation with Joi on all register fields
-* XSS protection with DOMPurify on server + escaping on frontend
+- User Registration/Login
+- Role-based access: Admin/User
+- Session management
+- Password hashing using bcrypt
+- Encryption of sensitive data
+- Input validation and sanitization
+- STRIDE & DREAD security modeling
+- Code scanning using CodeQL
+---
 
 \---
 
 ## Security Implementations
+- Input Validation: [e.g., validator.js]
+- Output Sanitization: [e.g., DOMPurify]
+- Password Hashing: bcrypt
+- Encryption: AES for sensitive fields
+- Session Management: [e.g., JWT expiry, cookie flags]
+- Headers: Helmet for CSP, XSS protection
+- CORS and rate limiting setup
+- Role-based Authorization
+---
 
-|Feature|Implementation|
-|-|-|
-|Authentication|JWT signed token, expires in 5 minutes|
-|Authorization|`verifyToken` + `adminOnly` middleware on protected routes|
-|Session Management|Frontend countdown timer, auto-logout on expiry, token in memory only|
-|Password Hashing|`bcrypt.hash(password, 12)` on register, `bcrypt.compare()` on login|
-|Encryption|AES-256-CBC encrypts `role` field before saving to MongoDB|
-|Input Validation|Joi schema: alphanum username, min 8 password, enum role|
-|Output Sanitization|DOMPurify on server, `\\\\\\\&lt;`/`\\\\\\\&gt;` escaping in table rendering|
-|Brute Force Protection|3 failed attempts triggers 30-second lockout|
-|Generic Errors|Same error message for wrong username or wrong password|
+## Threat Modeling
+See docs/STRIDE_Threat_Model.md`
+See docs/DREAD_Risk_Assessment.md`
+---
+
+## Code Scanning Tools Used
+- [ ] GitHub CodeQL
 
 
 ## Setup Instructions
 
-### 1\. Clone the repository
-
-```bash
-git clone https://github.com/YOUR\\\\\\\_USERNAME/YOUR\\\\\\\_REPO.git
-cd YOUR\\\\\\\_REPO
-```
-
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/TimurPheonix/Application-Security-Project.git](https://github.com/TimurPheonix/Application-Security-Project.git)
+   cd Application-Security-Project
+   
 ### 2\. Install dependencies
 
 ```bash
@@ -80,7 +76,7 @@ mongod
 ### 4\. Create a `.env` file
 
 ```
-JWT\\\\\\\_SECRET=your\\\\\\\_secret\\\\\\\_key\\\\\\\_here
+JWT\\\\\\\_SECRET=your_secret_key_here
 PORT=3000
 ```
 
@@ -97,15 +93,6 @@ Open `ApplicationProject02.html` in your browser.
 ```
 
 \\\\---
-
-## Test Accounts (MongoDB)
-
-|Username|Role|
-|-|-|
-|cyberro|Admin|
-|cyber|User|
-|cyberr|User|
-
 > Passwords are bcrypt hashed in the database.
 
 \\\\---
