@@ -55,14 +55,6 @@ A secure web application built as part of the Application Security course. It de
 |Brute Force Protection|3 failed attempts triggers 30-second lockout|
 |Generic Errors|Same error message for wrong username or wrong password|
 
-\---
-
-## Threat Modeling
-
-* See [`docs/STRIDE_Threat_Model.md`](docs/STRIDE_Threat_Model.md)
-* See [`docs/DREAD_Risk_Assessment.docx`](docs/DREAD_Risk_Assessment.docx)
-
-\---
 
 ## Code Scanning Tools Used
 
