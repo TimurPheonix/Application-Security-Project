@@ -60,7 +60,7 @@ A secure web application built as part of the Application Security course. It de
 ## Threat Modeling
 
 * See [`docs/STRIDE_Threat_Model.md`](docs/STRIDE_Threat_Model.md)
-* See [`docs/DREAD_Risk_Assessment.md`](docs/DREAD_Risk_Assessment.md)
+* See [`docs/DREAD_Risk_Assessment.docx`](docs/DREAD_Risk_Assessment.docx)
 
 \---
 
