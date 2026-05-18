@@ -278,7 +278,7 @@ async function renderTable() {
                 action = `<button class="del-btn" onclick="askDelete('${u.username}')">Delete</button>`;
             }
 
-            // هنا التعديل: قمنا بتغيير ${u.username} لتصبح محيمة ضد هجمات XSS
+            
             return `<tr style="${pendingDelete === u.username ? 'background:#fff0f0;' : ''}">
                 <td>${i+1}</td>
                 <td>${u.username.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td> 
