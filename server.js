@@ -5,6 +5,7 @@ const jwt      = require('jsonwebtoken');
 const cors     = require('cors');
 const Joi      = require('joi');
 const crypto   = require('crypto'); 
+const rateLimit = require('express-rate-limit');
 const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
 
@@ -18,6 +19,19 @@ app.use(cors());
 require('dotenv').config();
 const JWT_SECRET = process.env.JWT_SECRET ;
 
+// ── RATE LIMITING ──────────────────────────────────────
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5,
+    message: { message: 'Too many login attempts. Try again in 15 minutes.' }
+});
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: { message: 'Too many requests. Please slow down.' }
+});
+app.use('/login',    loginLimiter);
+app.use('/register', apiLimiter);
 
 const algorithm = 'aes-256-cbc';
 const key = crypto.scryptSync('mySecretPassword', 'salt', 32); 
@@ -86,7 +100,6 @@ app.post('/register', async (req, res) => {
         const cleanUsername = DOMPurify.sanitize(username);
         const hashedPassword = await bcrypt.hash(password, 12); 
 
-        
         const encryptedRole = encrypt(role);
 
         const newUser = new User({ 
@@ -111,7 +124,6 @@ app.post('/login', async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password)))
         return res.status(401).send({ message: 'Invalid credentials.' });
 
-    
     const decryptedRole = decrypt(user.role);
 
     const token = jwt.sign(
