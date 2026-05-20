@@ -21,7 +21,7 @@ const JWT_SECRET = process.env.JWT_SECRET ;
 
 // ── RATE LIMITING ──────────────────────────────────────
 const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000, 
     max: 5,
     message: { message: 'Too many login attempts. Try again in 15 minutes.' }
 });
@@ -64,9 +64,13 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+const passwordRegex = /^[^<>'"&%;]*$/; 
+
 const registerSchema = Joi.object({
     username: Joi.string().alphanum().min(3).max(30).required(),
-    password: Joi.string().min(8).required(),
+    password: Joi.string().min(8).invalid(Joi.ref('username')).regex(passwordRegex).required().messages({
+        'string.pattern.base': 'Password contains forbidden characters or potential XSS payloads.'
+    }),
     role: Joi.string().valid('User', 'Admin').required()
 });
 
@@ -90,63 +94,85 @@ function adminOnly(req, res, next) {
     next();
 }
 
-// ── REGISTER  ──────────────────────────
+// ── REGISTER ──────────────────────────
 app.post('/register', async (req, res) => {
     try {
-        const { error } = registerSchema.validate(req.body);
+        const rawPassword = req.body.password ? decodeURIComponent(req.body.password) : '';
+        const rawUsername = req.body.username ? req.body.username.trim() : '';
+
+        const { error } = registerSchema.validate({
+            username: rawUsername,
+            password: rawPassword,
+            role: req.body.role
+        });
+        
         if (error) return res.status(400).send({ message: error.details[0].message });
 
-        const { username, password, role } = req.body;
-        const cleanUsername = DOMPurify.sanitize(username);
-        const hashedPassword = await bcrypt.hash(password, 12); 
+        const exist = await User.findOne({ username: rawUsername });
+        if (exist) return res.status(400).send({ message: 'Username already exists.' });
 
-        const encryptedRole = encrypt(role);
+        const hashedPassword = await bcrypt.hash(rawPassword, 12); 
+        const encryptedRole = encrypt(req.body.role);
 
         const newUser = new User({ 
-            username: cleanUsername, 
+            username: rawUsername, 
             password: hashedPassword, 
             role: encryptedRole 
         });
         
         await newUser.save();
-        res.status(201).send({ message: 'User created' });
+        res.status(201).send({ message: 'User created successfully' });
     } catch (err) {
         res.status(400).send({ message: 'Error creating user.' });
     }
 });
 
-// ── LOGIN  ──────────────────────────
+// ── LOGIN ──────────────────────────
 app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-    const cleanUsername = DOMPurify.sanitize(username);
-    const user = await User.findOne({ username: cleanUsername });
+    try {
+        const rawPassword = req.body.password ? decodeURIComponent(req.body.password) : '';
+        const rawUsername = req.body.username ? req.body.username.trim() : '';
+        
+        const user = await User.findOne({ username: rawUsername });
 
-    if (!user || !(await bcrypt.compare(password, user.password)))
-        return res.status(401).send({ message: 'Invalid credentials.' });
+        if (!user || !(await bcrypt.compare(rawPassword, user.password)))
+            return res.status(401).send({ message: 'Invalid credentials.' });
 
-    const decryptedRole = decrypt(user.role);
+        const decryptedRole = decrypt(user.role);
+        const token = jwt.sign(
+            { username: user.username, role: decryptedRole },
+            JWT_SECRET,
+            { expiresIn: '5m' }
+        );
 
-    const token = jwt.sign(
-        { username: user.username, role: decryptedRole },
-        JWT_SECRET,
-        { expiresIn: '5m' }
-    );
-
-    res.send({ 
-        token, 
-        username: DOMPurify.sanitize(user.username), 
-        role: decryptedRole 
-    });
+        res.send({ token, username: user.username, role: decryptedRole });
+    } catch (err) {
+        res.status(500).send({ message: 'Internal server error.' });
+    }
 });
 
-// ── GET USERS  ──────────────────
+// ── GET USERS ──────────────────
 app.get('/users', verifyToken, adminOnly, async (req, res) => {
-    const users = await User.find({}, 'username role');
-    const safeUsers = users.map(u => ({
-        username: DOMPurify.sanitize(u.username),
-        role: decrypt(u.role) 
-    }));
-    res.send(safeUsers);
+    try {
+        const users = await User.find({}, 'username role');
+        const safeUsers = users.map(u => ({
+            username: u.username,
+            role: DOMPurify.sanitize(decrypt(u.role)) 
+        }));
+        res.send(safeUsers);
+    } catch {
+        res.status(500).send({ message: 'Error fetching users' });
+    }
 });
 
-app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+// ── DELETE USER ──────────────────
+app.delete('/users/:username', verifyToken, adminOnly, async (req, res) => {
+    try {
+        await User.findOneAndDelete({ username: req.params.username });
+        res.send({ message: 'User deleted successfully' });
+    } catch {
+        res.status(500).send({ message: 'Error deleting user' });
+    }
+});
+
+app.listen(3000, () => console.log('Server running on port 3000'));
